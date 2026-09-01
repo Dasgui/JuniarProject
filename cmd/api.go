@@ -1,6 +1,9 @@
 package main
 
 import (
+	handler "JuniarProject/internal/handler/product"
+	repository "JuniarProject/internal/repository/product"
+	service "JuniarProject/internal/service/product"
 	"log"
 	"net/http"
 	"time"
@@ -31,11 +34,15 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Route("/products", func(r chi.Router) {
+	productRepository := repository.NewProductRepository(app.db)
+	productService := service.NewProductService(productRepository)
+	productHandler := handler.NewProductHandler(productService)
 
+	r.Route("/products", func(r chi.Router) {
+		r.Post("/", productHandler.CreateProduct)
+		r.Get("/", productHandler.GetProducts)
 	})
 
 	return r
