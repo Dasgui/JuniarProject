@@ -43,6 +43,12 @@ func (app *application) mount() http.Handler {
 	r.Route("/products", func(r chi.Router) {
 		r.Post("/", productHandler.CreateProduct)
 		r.Get("/", productHandler.GetProducts)
+		r.Route("/{id}", func(r chi.Router) {
+			r.Get("/", productHandler.GetProductByID)
+			r.Put("/", productHandler.UpdateProduct)
+			r.Delete("/", productHandler.DeleteProduct)
+		})
+
 	})
 
 	return r
