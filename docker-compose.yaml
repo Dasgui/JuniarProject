@@ -10,6 +10,32 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U Comix -d product-store"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: shop-api
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres  # Важно: имя сервиса в docker-compose
+      DB_PORT: 5432
+      SERVER_PORT: 8081
+      DB_USER: Comix
+      DB_PASSWORD: tron
+      DB_NAME: product-store
+    restart: unless-stopped
 
 volumes:
   postgres-data:
