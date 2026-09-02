@@ -18,6 +18,27 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  migration:
+    build:
+      context: ./
+      dockerfile: internal/migrations/Dockerfile
+    container_name: migration-runner
+    env_file:
+      - .env
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "host=postgres port=${DB_PORT} user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME} sslmode=disable"
+      GOOSE_MIGRATION_DIR: /app/migrations
+    command:
+      - sh
+      - -c
+      - |
+        goose up
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build:
       context: ./
@@ -29,7 +50,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DB_HOST: postgres  # Важно: имя сервиса в docker-compose
+      DB_HOST: postgres
       DB_PORT: 5432
       SERVER_PORT: 8081
       DB_USER: Comix
