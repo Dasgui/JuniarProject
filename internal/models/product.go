@@ -18,7 +18,7 @@ type Product struct {
 
 func (product *Product) CheckFields() error {
 	if product.IsFieldsEmpty() {
-		return internalErrors.EmptyFieldsErr
+		return internalErrors.EmptyFieldsError
 	}
 	if product.IsNegativePrice() {
 		return internalErrors.NegativePriceError
