@@ -48,6 +48,7 @@ var (
 		http.StatusNotFound,
 	}
 
+	// InvalidParameterError - структура для ответа с ошибкой в Swagger
 	InvalidParameterError = AppError{
 		errors.New("Проверьте передаваемые параметры"),
 		http.StatusBadRequest,
@@ -80,6 +81,7 @@ func PrintError(w http.ResponseWriter, err error) {
 func ConvertError(err error) AppError {
 	var syntaxErr *json.SyntaxError
 	var unmarshalTypeErr *json.UnmarshalTypeError
+	var unmarshalInvalidErr *json.InvalidUnmarshalError
 
 	//var appErr AppError
 	//if errors.As(err, &appErr) {
@@ -90,17 +92,30 @@ func ConvertError(err error) AppError {
 		return JsonEmptyBodyError
 	}
 
-	if errors.As(err, &syntaxErr) {
+	switch {
+	case errors.As(err, &unmarshalInvalidErr):
+		return JsonTypeError
+
+	case strings.Contains(err.Error(), "unknown field"):
+		return JsonUnknownFieldError
+
+	case errors.As(err, &unmarshalTypeErr):
+		return JsonTypeError
+
+	case errors.As(err, &syntaxErr):
 		return JsonSyntaxError
 	}
+	//if errors.As(err, &syntaxErr) {
+	//	return JsonSyntaxError
+	//}
 
-	if errors.As(err, &unmarshalTypeErr) {
-		return JsonTypeError
-	}
+	//if errors.As(err, &unmarshalTypeErr) {
+	//	return JsonTypeError
+	//}
 
-	if strings.Contains(err.Error(), "unknown field") {
-		return JsonUnknownFieldError
-	}
+	//if strings.Contains(err.Error(), "unknown field") {
+	//	return JsonUnknownFieldError
+	//}
 
 	switch {
 	case errors.Is(err, PriceError.Err):

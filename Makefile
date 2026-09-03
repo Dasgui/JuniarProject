@@ -1,7 +1,5 @@
 all:
-	$(MAKE) init-db
-	$(MAKE) migrate
-	go run ./cmd/
+	docker-compose up --build
 init-db:
 	docker compose up -d
 
@@ -17,3 +15,6 @@ clean:
 
 test:
 	go test -v -race ./internal/handler/product/...
+
+swag:
+	swag init -g cmd/main.go -o docs

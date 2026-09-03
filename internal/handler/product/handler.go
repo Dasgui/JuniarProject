@@ -19,19 +19,32 @@ func NewProductHandler(service service.ProductService) *ProductHandler {
 	return &ProductHandler{service: service}
 }
 
+// @Summary Добавить новый продукт
+// @Tags products
+// @Description Позволяет добавить новый продукт в базу данных
+// @Accept json
+// @Produce json
+// @Param input body models.ProductRequest true "Информация о товаре"
+// @Success 200 {object} models.Product
+// @Failure 400 {string} internalErrors.InvalidParameterError
+// @Failure 500 {string} internalErrors.InternalServerErr
+// @Router /products [post]
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
+	var requestBody models.ProductRequest
 	var result models.Product
 
-	if err := json.Read(r, &result); err != nil {
+	if err := json.Read(r, &requestBody); err != nil {
 		internalErrors.PrintError(w, err)
 		return
 	}
 
-	err := result.CheckFields()
+	err := requestBody.CheckFields()
 	if err != nil {
 		internalErrors.PrintError(w, err)
 		return
 	}
+
+	result = requestBody.ConvertToProduct()
 
 	result, err = h.service.CreateProduct(r.Context(), result)
 
@@ -43,6 +56,20 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	json.Write(w, http.StatusOK, result)
 }
 
+// @Summary Получить все продукты
+// @Tags products
+// @Description Позволяет получить список продуктов, с возможностью фильтрации.
+// @Accept json
+// @Produce json
+// @Param category query string false "Фильтр по категории"
+// @Param price_from query number false "Минимальная цена"
+// @Param price_to query number false "Максимальная цена"
+// @Param limit query int false "Количество записей"
+// @Param offset query int false "Смещение"
+// @Success 200 {array} models.Product
+// @Failure 400 {string} internalErrors.InvalidParameterError
+// @Failure 500 {string} internalErrors.InternalServerErr
+// @Router /products [get]
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	var priceFrom float64
 	var priceTo float64
@@ -106,6 +133,16 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := h.service.GetProducts(r.Context(), category, priceFrom, priceTo, limit, offset)
+	//var response []models.ProductResponse
+	//for _, p := range result {
+	//	response = append(response, models.ProductResponse{
+	//		Id:        p.Id,
+	//		Name:      p.Name,
+	//		Category:  p.Category,
+	//		Price:     p.Price,
+	//		CreatedAt: p.CreatedAt.Time,
+	//	})
+	//}
 
 	if err != nil {
 		internalErrors.PrintError(w, err)
@@ -115,6 +152,17 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	json.Write(w, http.StatusOK, result)
 }
 
+// @Summary Получить конкретный продукт
+// @Tags products
+// @Description Позволяет получить конкретный продукт по его id
+// @Accept json
+// @Produce json
+// @Param id path string false "Id товара"
+// @Success 200 {object} models.Product
+// @Failure 400 {string} internalErrors.InvalidParameterError
+// @Failure 404 {string} internalErrors.DataNotFound
+// @Failure 500 {string} internalErrors.InternalServerErr
+// @Router /products/{id} [get]
 func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
@@ -132,21 +180,34 @@ func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) 
 	json.Write(w, http.StatusOK, result)
 }
 
+// @Summary Обновить конкретный продукт
+// @Tags products
+// @Description Позволяет обновить конкретный продукт по его id
+// @Accept json
+// @Produce json
+// @Param id path string false "Id товара"
+// @Param input body models.ProductRequest true "Информация о товаре, которую необходимо обновить"
+// @Success 200 {object} models.Product
+// @Failure 400 {string} internalErrors.InvalidParameterError
+// @Failure 404 {string} internalErrors.DataNotFound
+// @Failure 500 {string} internalErrors.InternalServerErr
+// @Router /products/{id} [put]
 func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	var requestBody models.ProductRequest
+	var result models.Product
 
 	if err != nil {
 		internalErrors.PrintError(w, err)
 		return
 	}
 
-	var result models.Product
-	if err := json.Read(r, &result); err != nil {
+	if err := json.Read(r, &requestBody); err != nil {
 		internalErrors.PrintError(w, err)
 		return
 	}
 
-	result, err = h.service.UpdateProduct(r.Context(), result, id)
+	result, err = h.service.UpdateProduct(r.Context(), requestBody, id)
 	if err != nil {
 		internalErrors.PrintError(w, err)
 		return
@@ -155,6 +216,17 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	json.Write(w, http.StatusOK, result)
 }
 
+// @Summary Удалить конкретный продукт
+// @Tags products
+// @Description Позволяет удалить конкретный продукт по его id
+// @Accept json
+// @Produce json
+// @Param id path string false "Id товара"
+// @Success 200 {object} models.Product
+// @Failure 400 {string} internalErrors.InvalidParameterError
+// @Failure 404 {string} internalErrors.DataNotFound
+// @Failure 500 {string} internalErrors.InternalServerErr
+// @Router /products/{id} [delete]
 func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 

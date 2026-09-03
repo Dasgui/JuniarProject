@@ -13,10 +13,26 @@ type Product struct {
 	Description string           `json:"description"`
 	Price       float64          `json:"price"`
 	Category    string           `json:"category"`
-	CreatedAt   pgtype.Timestamp `json:"created_at"`
+	CreatedAt   pgtype.Timestamp `json:"created_at" swaggerignore:"true"`
 }
 
-func (product *Product) CheckFields() error {
+type ProductRequest struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Price       float64 `json:"price"`
+	Category    string  `json:"category"`
+}
+
+func (r *ProductRequest) ConvertToProduct() Product {
+	return Product{
+		Name:        r.Name,
+		Description: r.Description,
+		Price:       r.Price,
+		Category:    r.Category,
+	}
+}
+
+func (product *ProductRequest) CheckFields() error {
 	if product.IsFieldsEmpty() {
 		return internalErrors.EmptyFieldsError.Err
 	}
@@ -26,14 +42,14 @@ func (product *Product) CheckFields() error {
 	return nil
 }
 
-func (product *Product) IsFieldsEmpty() bool {
+func (product *ProductRequest) IsFieldsEmpty() bool {
 	if strings.TrimSpace(product.Name) == "" || strings.TrimSpace(product.Description) == "" || strings.TrimSpace(product.Category) == "" {
 		return true
 	}
 	return false
 }
 
-func (product *Product) IsNegativePrice() bool {
+func (product *ProductRequest) IsNegativePrice() bool {
 	if product.Price < 0 {
 		return true
 	}

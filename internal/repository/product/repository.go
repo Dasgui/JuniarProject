@@ -13,7 +13,7 @@ type ProductRepository interface {
 	CreateProduct(ctx context.Context, product models.Product) (models.Product, error)
 	GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64, limit int, offset int) ([]models.Product, error)
 	GetProductByID(ctx context.Context, id int) (models.Product, error)
-	UpdateProduct(ctx context.Context, product models.Product, id int) (models.Product, error)
+	UpdateProduct(ctx context.Context, product models.ProductRequest, id int) (models.Product, error)
 	DeleteProduct(ctx context.Context, id int) (models.Product, error)
 }
 
@@ -115,11 +115,11 @@ func (rep *ProductRepositoryImpl) GetProductByID(ctx context.Context, id int) (m
 	return result, err
 }
 
-func (rep *ProductRepositoryImpl) UpdateProduct(ctx context.Context, product models.Product, id int) (models.Product, error) {
+func (rep *ProductRepositoryImpl) UpdateProduct(ctx context.Context, product models.ProductRequest, id int) (models.Product, error) {
 	var result models.Product
 
-	row := rep.db.QueryRow(ctx, "UPDATE products SET name = $1, description = $2, price = $3, category = $4, created_at = $5 WHERE id = $6 RETURNING *",
-		product.Name, product.Description, product.Price, product.Category, product.CreatedAt, id)
+	row := rep.db.QueryRow(ctx, "UPDATE products SET name = $1, description = $2, price = $3, category = $4 WHERE id = $5 RETURNING *",
+		product.Name, product.Description, product.Price, product.Category, id)
 
 	err := row.Scan(&result.Id, &result.Name, &result.Description, &result.Price, &result.Category, &result.CreatedAt)
 	if err != nil {

@@ -8,9 +8,12 @@ import (
 	"net/http"
 	"time"
 
+	_ "JuniarProject/docs"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type config struct {
@@ -39,6 +42,10 @@ func (app *application) mount() http.Handler {
 	productRepository := repository.NewProductRepository(app.db)
 	productService := service.NewProductService(productRepository)
 	productHandler := handler.NewProductHandler(productService)
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8081/swagger/doc.json"), //The url pointing to API definition
+	))
 
 	r.Route("/products", func(r chi.Router) {
 		r.Post("/", productHandler.CreateProduct)

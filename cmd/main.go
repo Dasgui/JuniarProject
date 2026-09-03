@@ -9,6 +9,9 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// @title Junior Project
+// @version 1.0
+
 func main() {
 	ctx := context.Background()
 

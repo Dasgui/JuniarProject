@@ -1,0 +1,206 @@
+definitions:
+  models.Product:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  models.ProductRequest:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+info:
+  contact: {}
+  title: Junior Project
+  version: "1.0"
+paths:
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить список продуктов, с возможностью фильтрации.
+      parameters:
+      - description: Фильтр по категории
+        in: query
+        name: category
+        type: string
+      - description: Минимальная цена
+        in: query
+        name: price_from
+        type: number
+      - description: Максимальная цена
+        in: query
+        name: price_to
+        type: number
+      - description: Количество записей
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Product'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получить все продукты
+      tags:
+      - products
+    post:
+      consumes:
+      - application/json
+      description: Позволяет добавить новый продукт в базу данных
+      parameters:
+      - description: Информация о товаре
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Добавить новый продукт
+      tags:
+      - products
+  /products/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Позволяет удалить конкретный продукт по его id
+      parameters:
+      - description: Id товара
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Удалить конкретный продукт
+      tags:
+      - products
+    get:
+      consumes:
+      - application/json
+      description: Позволяет получить конкретный продукт по его id
+      parameters:
+      - description: Id товара
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Получить конкретный продукт
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Позволяет обновить конкретный продукт по его id
+      parameters:
+      - description: Id товара
+        in: path
+        name: id
+        type: string
+      - description: Информация о товаре, которую необходимо обновить
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Обновить конкретный продукт
+      tags:
+      - products
+swagger: "2.0"
