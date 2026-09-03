@@ -14,3 +14,6 @@ drop-bd:
 clean:
 	$(MAKE) drop-bd
 	docker compose down -v
+
+test:
+	go test -v -race ./internal/handler/product/...

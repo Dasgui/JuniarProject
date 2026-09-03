@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"JuniarProject/internal/internalErrors"
 	"JuniarProject/internal/models"
 	"context"
 	"fmt"
@@ -11,7 +10,7 @@ import (
 
 //go:generate mockgen -source=repository.go -destination=mocks/mock.go
 type ProductRepository interface {
-	CreatProduct(ctx context.Context, product models.Product) (models.Product, error)
+	CreateProduct(ctx context.Context, product models.Product) (models.Product, error)
 	GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64, limit int, offset int) ([]models.Product, error)
 	GetProductByID(ctx context.Context, id int) (models.Product, error)
 	UpdateProduct(ctx context.Context, product models.Product, id int) (models.Product, error)
@@ -22,8 +21,8 @@ type ProductRepositoryImpl struct {
 	db *pgx.Conn
 }
 
-func NewProductRepository(db *pgx.Conn) ProductRepositoryImpl {
-	return ProductRepositoryImpl{db: db}
+func NewProductRepository(db *pgx.Conn) *ProductRepositoryImpl {
+	return &ProductRepositoryImpl{db: db}
 }
 
 func (rep *ProductRepositoryImpl) CreateProduct(ctx context.Context, product models.Product) (models.Product, error) {
@@ -111,7 +110,7 @@ func (rep *ProductRepositoryImpl) GetProductByID(ctx context.Context, id int) (m
 	err := row.Scan(&result.Id, &result.Name, &result.Description, &result.Price, &result.Category, &result.CreatedAt)
 
 	if err != nil {
-		return result, internalErrors.HandleDbError(err)
+		return result, err
 	}
 	return result, err
 }
@@ -124,7 +123,7 @@ func (rep *ProductRepositoryImpl) UpdateProduct(ctx context.Context, product mod
 
 	err := row.Scan(&result.Id, &result.Name, &result.Description, &result.Price, &result.Category, &result.CreatedAt)
 	if err != nil {
-		return result, internalErrors.HandleDbError(err)
+		return result, err
 	}
 
 	return result, err
@@ -138,7 +137,7 @@ func (rep *ProductRepositoryImpl) DeleteProduct(ctx context.Context, id int) (mo
 	err := row.Scan(&result.Id, &result.Name, &result.Description, &result.Price, &result.Category, &result.CreatedAt)
 
 	if err != nil {
-		return result, internalErrors.HandleDbError(err)
+		return result, err
 	}
 
 	return result, err

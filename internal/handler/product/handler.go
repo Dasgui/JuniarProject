@@ -23,7 +23,7 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var result models.Product
 
 	if err := json.Read(r, &result); err != nil {
-		internalErrors.PrintError(w, internalErrors.ParseJsonError(err))
+		internalErrors.PrintError(w, err)
 		return
 	}
 
@@ -33,7 +33,7 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err = h.service.CreatProduct(r.Context(), result)
+	result, err = h.service.CreateProduct(r.Context(), result)
 
 	if err != nil {
 		internalErrors.PrintError(w, err)
@@ -54,33 +54,42 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 
 	category := r.URL.Query().Get("category")
 
+	// Необходимо будет сделать общую функцию
 	if priceFromStr := r.URL.Query().Get("price_from"); priceFromStr != "" {
 		if val, err := strconv.ParseFloat(priceFromStr, 64); err == nil {
+			if val < 0 {
+				internalErrors.PrintError(w, internalErrors.NegativePriceError.Err)
+				return
+			}
 			priceFrom = val
 		} else {
-			internalErrors.PrintError(w, internalErrors.ParseUrlError(err))
+			internalErrors.PrintError(w, err)
 			return
 		}
 	}
 
 	if priceToStr := r.URL.Query().Get("price_to"); priceToStr != "" {
 		if val, err := strconv.ParseFloat(priceToStr, 64); err == nil {
+			if val < 0 {
+				internalErrors.PrintError(w, internalErrors.NegativePriceError.Err)
+				return
+			}
 			priceTo = val
 		} else {
-			internalErrors.PrintError(w, internalErrors.ParseUrlError(err))
+			internalErrors.PrintError(w, err)
 			return
 		}
 	}
 
 	// Валидация: price_from не может быть больше price_to
 	if priceFrom != 0 && priceTo != 0 && priceFrom > priceTo {
-		internalErrors.PrintError(w, internalErrors.PriceError)
+		internalErrors.PrintError(w, internalErrors.PriceError.Err)
 		return
 	}
 
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 		if val, err := strconv.Atoi(limitStr); err != nil || val < 0 {
-			internalErrors.PrintError(w, internalErrors.ParseUrlError(err))
+			internalErrors.PrintError(w, err)
 			return
 		} else {
 			limit = val
@@ -89,7 +98,7 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 
 	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
 		if val, err := strconv.Atoi(offsetStr); err != nil || val < 0 {
-			internalErrors.PrintError(w, internalErrors.ParseUrlError(err))
+			internalErrors.PrintError(w, err)
 			return
 		} else {
 			offset = val
@@ -109,12 +118,13 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		internalErrors.PrintError(w, internalErrors.ParseUrlError(err))
+		internalErrors.PrintError(w, err)
 		return
 	}
 
 	result, err := h.service.GetProductByID(r.Context(), id)
 	if err != nil {
+
 		internalErrors.PrintError(w, err)
 		return
 	}
@@ -126,13 +136,13 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 
 	if err != nil {
-		internalErrors.PrintError(w, internalErrors.ParseUrlError(err))
+		internalErrors.PrintError(w, err)
 		return
 	}
 
 	var result models.Product
 	if err := json.Read(r, &result); err != nil {
-		internalErrors.PrintError(w, internalErrors.ParseJsonError(err))
+		internalErrors.PrintError(w, err)
 		return
 	}
 
@@ -149,7 +159,7 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 
 	if err != nil {
-		internalErrors.PrintError(w, internalErrors.ParseUrlError(err))
+		internalErrors.PrintError(w, err)
 		return
 	}
 

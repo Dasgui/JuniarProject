@@ -18,10 +18,10 @@ type Product struct {
 
 func (product *Product) CheckFields() error {
 	if product.IsFieldsEmpty() {
-		return internalErrors.EmptyFieldsError
+		return internalErrors.EmptyFieldsError.Err
 	}
 	if product.IsNegativePrice() {
-		return internalErrors.NegativePriceError
+		return internalErrors.NegativePriceError.Err
 	}
 	return nil
 }

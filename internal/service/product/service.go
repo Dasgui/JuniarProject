@@ -9,8 +9,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/mock.go
 type ProductService interface {
-	CreatProduct(ctx context.Context, product models.Product) (models.Product, error)
+	CreateProduct(ctx context.Context, product models.Product) (models.Product, error)
 	GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64, limit int, offset int) ([]models.Product, error)
 	GetProductByID(ctx context.Context, id int) (models.Product, error)
 	UpdateProduct(ctx context.Context, product models.Product, id int) (models.Product, error)
@@ -25,12 +26,12 @@ func NewProductService(repo repository.ProductRepository) ProductService {
 	return &ProductServiceImpl{repo}
 }
 
-func (s *ProductServiceImpl) CreatProduct(ctx context.Context, product models.Product) (models.Product, error) {
+func (s *ProductServiceImpl) CreateProduct(ctx context.Context, product models.Product) (models.Product, error) {
 	product.CreatedAt = pgtype.Timestamp{
 		Time:  time.Now(),
 		Valid: true,
 	}
-	return s.repo.CreatProduct(ctx, product)
+	return s.repo.CreateProduct(ctx, product)
 }
 
 func (s *ProductServiceImpl) GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64, limit int, offset int) ([]models.Product, error) {

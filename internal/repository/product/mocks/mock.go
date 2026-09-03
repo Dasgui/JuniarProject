@@ -35,19 +35,19 @@ func (m *MockProductRepository) EXPECT() *MockProductRepositoryMockRecorder {
 	return m.recorder
 }
 
-// CreatProduct mocks base method.
-func (m *MockProductRepository) CreatProduct(ctx context.Context, product models.Product) (models.Product, error) {
+// CreateProduct mocks base method.
+func (m *MockProductRepository) CreateProduct(ctx context.Context, product models.Product) (models.Product, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatProduct", ctx, product)
+	ret := m.ctrl.Call(m, "CreateProduct", ctx, product)
 	ret0, _ := ret[0].(models.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreatProduct indicates an expected call of CreatProduct.
-func (mr *MockProductRepositoryMockRecorder) CreatProduct(ctx, product interface{}) *gomock.Call {
+// CreateProduct indicates an expected call of CreateProduct.
+func (mr *MockProductRepositoryMockRecorder) CreateProduct(ctx, product interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatProduct", reflect.TypeOf((*MockProductRepository)(nil).CreatProduct), ctx, product)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProductRepository)(nil).CreateProduct), ctx, product)
 }
 
 // DeleteProduct mocks base method.
