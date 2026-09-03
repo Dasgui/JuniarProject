@@ -18,10 +18,10 @@ type ProductService interface {
 }
 
 type ProductServiceImpl struct {
-	repo repository.ProductRepositoryImpl
+	repo repository.ProductRepository
 }
 
-func NewProductService(repo repository.ProductRepositoryImpl) ProductService {
+func NewProductService(repo repository.ProductRepository) ProductService {
 	return &ProductServiceImpl{repo}
 }
 
@@ -30,7 +30,7 @@ func (s *ProductServiceImpl) CreatProduct(ctx context.Context, product models.Pr
 		Time:  time.Now(),
 		Valid: true,
 	}
-	return s.repo.CreateProduct(ctx, product)
+	return s.repo.CreatProduct(ctx, product)
 }
 
 func (s *ProductServiceImpl) GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64, limit int, offset int) ([]models.Product, error) {

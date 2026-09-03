@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+//go:generate mockgen -source=repository.go -destination=mocks/mock.go
 type ProductRepository interface {
 	CreatProduct(ctx context.Context, product models.Product) (models.Product, error)
 	GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64, limit int, offset int) ([]models.Product, error)
