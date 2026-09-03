@@ -96,7 +96,7 @@ func (mr *MockProductServiceMockRecorder) GetProducts(ctx, category, priceFrom, 
 }
 
 // UpdateProduct mocks base method.
-func (m *MockProductService) UpdateProduct(ctx context.Context, product models.Product, id int) (models.Product, error) {
+func (m *MockProductService) UpdateProduct(ctx context.Context, product models.ProductRequest, id int) (models.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProduct", ctx, product, id)
 	ret0, _ := ret[0].(models.Product)

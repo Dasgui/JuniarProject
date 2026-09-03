@@ -3,6 +3,7 @@ package handler
 import (
 	"JuniarProject/internal/internalErrors"
 	"JuniarProject/internal/lib/json"
+	"JuniarProject/internal/lib/parser"
 	"JuniarProject/internal/models"
 	service "JuniarProject/internal/service/product"
 	"net/http"
@@ -81,68 +82,36 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 
 	category := r.URL.Query().Get("category")
 
-	// Необходимо будет сделать общую функцию
-	if priceFromStr := r.URL.Query().Get("price_from"); priceFromStr != "" {
-		if val, err := strconv.ParseFloat(priceFromStr, 64); err == nil {
-			if val < 0 {
-				internalErrors.PrintError(w, internalErrors.NegativePriceError.Err)
-				return
-			}
-			priceFrom = val
-		} else {
-			internalErrors.PrintError(w, err)
-			return
-		}
+	priceFrom, err = parser.ParseRequestToFloat(r, "price_from")
+	if err != nil {
+		internalErrors.PrintError(w, err)
+		return
 	}
 
-	if priceToStr := r.URL.Query().Get("price_to"); priceToStr != "" {
-		if val, err := strconv.ParseFloat(priceToStr, 64); err == nil {
-			if val < 0 {
-				internalErrors.PrintError(w, internalErrors.NegativePriceError.Err)
-				return
-			}
-			priceTo = val
-		} else {
-			internalErrors.PrintError(w, err)
-			return
-		}
+	priceTo, err = parser.ParseRequestToFloat(r, "price_to")
+	if err != nil {
+		internalErrors.PrintError(w, err)
+		return
 	}
 
-	// Валидация: price_from не может быть больше price_to
 	if priceFrom != 0 && priceTo != 0 && priceFrom > priceTo {
 		internalErrors.PrintError(w, internalErrors.PriceError.Err)
 		return
 	}
 
-	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
-		if val, err := strconv.Atoi(limitStr); err != nil || val < 0 {
-			internalErrors.PrintError(w, err)
-			return
-		} else {
-			limit = val
-		}
+	limit, err = parser.ParseRequestToInt(r, "limit")
+	if err != nil {
+		internalErrors.PrintError(w, err)
+		return
 	}
 
-	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
-		if val, err := strconv.Atoi(offsetStr); err != nil || val < 0 {
-			internalErrors.PrintError(w, err)
-			return
-		} else {
-			offset = val
-		}
+	offset, err = parser.ParseRequestToInt(r, "offset")
+	if err != nil {
+		internalErrors.PrintError(w, err)
+		return
 	}
 
 	result, err := h.service.GetProducts(r.Context(), category, priceFrom, priceTo, limit, offset)
-	//var response []models.ProductResponse
-	//for _, p := range result {
-	//	response = append(response, models.ProductResponse{
-	//		Id:        p.Id,
-	//		Name:      p.Name,
-	//		Category:  p.Category,
-	//		Price:     p.Price,
-	//		CreatedAt: p.CreatedAt.Time,
-	//	})
-	//}
 
 	if err != nil {
 		internalErrors.PrintError(w, err)
