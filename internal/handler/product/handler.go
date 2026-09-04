@@ -72,46 +72,18 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} internalErrors.InternalServerErr
 // @Router /products [get]
 func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
-	var priceFrom float64
-	var priceTo float64
-
+	var parameters models.ProductsGetQueryParameters
 	var err error
 
-	limit := 0
-	offset := 0
+	var result []models.Product
 
-	category := r.URL.Query().Get("category")
-
-	priceFrom, err = parser.ParseRequestToFloat(r, "price_from")
+	parameters, err = parseRequestParameters(r)
 	if err != nil {
 		internalErrors.PrintError(w, err)
 		return
 	}
 
-	priceTo, err = parser.ParseRequestToFloat(r, "price_to")
-	if err != nil {
-		internalErrors.PrintError(w, err)
-		return
-	}
-
-	if priceFrom != 0 && priceTo != 0 && priceFrom > priceTo {
-		internalErrors.PrintError(w, internalErrors.PriceError.Err)
-		return
-	}
-
-	limit, err = parser.ParseRequestToInt(r, "limit")
-	if err != nil {
-		internalErrors.PrintError(w, err)
-		return
-	}
-
-	offset, err = parser.ParseRequestToInt(r, "offset")
-	if err != nil {
-		internalErrors.PrintError(w, err)
-		return
-	}
-
-	result, err := h.service.GetProducts(r.Context(), category, priceFrom, priceTo, limit, offset)
+	result, err = h.service.GetProducts(r.Context(), parameters)
 
 	if err != nil {
 		internalErrors.PrintError(w, err)
@@ -119,6 +91,39 @@ func (h *ProductHandler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.Write(w, http.StatusOK, result)
+}
+
+func parseRequestParameters(r *http.Request) (models.ProductsGetQueryParameters, error) {
+	var result models.ProductsGetQueryParameters
+	var err error
+
+	result.Category = r.URL.Query().Get("category")
+
+	result.PriceFrom, err = parser.ParseRequestToFloat(r, "price_from")
+	if err != nil {
+		return result, err
+	}
+
+	result.PriceTo, err = parser.ParseRequestToFloat(r, "price_to")
+	if err != nil {
+		return result, err
+	}
+
+	if result.PriceFrom != 0 && result.PriceTo != 0 && result.PriceFrom > result.PriceTo {
+		return result, internalErrors.PriceError.Err
+	}
+
+	result.Limit, err = parser.ParseRequestToInt(r, "limit")
+	if err != nil {
+		return result, err
+	}
+
+	result.Offset, err = parser.ParseRequestToInt(r, "offset")
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
 }
 
 // @Summary Получить конкретный продукт

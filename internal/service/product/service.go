@@ -12,7 +12,7 @@ import (
 //go:generate mockgen -source=service.go -destination=mocks/mock.go
 type ProductService interface {
 	CreateProduct(ctx context.Context, product models.Product) (models.Product, error)
-	GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64, limit int, offset int) ([]models.Product, error)
+	GetProducts(ctx context.Context, parameters models.ProductsGetQueryParameters) ([]models.Product, error)
 	GetProductByID(ctx context.Context, id int) (models.Product, error)
 	UpdateProduct(ctx context.Context, product models.ProductRequest, id int) (models.Product, error)
 	DeleteProduct(ctx context.Context, id int) (models.Product, error)
@@ -34,8 +34,8 @@ func (s *ProductServiceImpl) CreateProduct(ctx context.Context, product models.P
 	return s.repo.CreateProduct(ctx, product)
 }
 
-func (s *ProductServiceImpl) GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64, limit int, offset int) ([]models.Product, error) {
-	return s.repo.GetProducts(ctx, category, priceFrom, priceTo, limit, offset)
+func (s *ProductServiceImpl) GetProducts(ctx context.Context, parameters models.ProductsGetQueryParameters) ([]models.Product, error) {
+	return s.repo.GetProducts(ctx, parameters)
 }
 
 func (s *ProductServiceImpl) GetProductByID(ctx context.Context, id int) (models.Product, error) {

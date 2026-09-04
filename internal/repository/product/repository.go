@@ -11,7 +11,7 @@ import (
 //go:generate mockgen -source=repository.go -destination=mocks/mock.go
 type ProductRepository interface {
 	CreateProduct(ctx context.Context, product models.Product) (models.Product, error)
-	GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64, limit int, offset int) ([]models.Product, error)
+	GetProducts(ctx context.Context, parameters models.ProductsGetQueryParameters) ([]models.Product, error)
 	GetProductByID(ctx context.Context, id int) (models.Product, error)
 	UpdateProduct(ctx context.Context, product models.ProductRequest, id int) (models.Product, error)
 	DeleteProduct(ctx context.Context, id int) (models.Product, error)
@@ -40,47 +40,17 @@ func (rep *ProductRepositoryImpl) CreateProduct(ctx context.Context, product mod
 	return result, err
 }
 
-func (rep *ProductRepositoryImpl) GetProducts(ctx context.Context, category string, priceFrom float64, priceTo float64,
-	limit int, offset int) ([]models.Product, error) {
+func (rep *ProductRepositoryImpl) GetProducts(ctx context.Context, parameters models.ProductsGetQueryParameters) ([]models.Product, error) {
 
 	var query = "SELECT * FROM products WHERE 1=1"
 	args := make([]any, 0)
-	argCount := 1
 
 	var rows pgx.Rows
 	var err error
 
 	var result []models.Product
 
-	if category != "" {
-		query = query + fmt.Sprintf(" AND category = $%d", argCount)
-		args = append(args, category)
-		argCount++
-	}
-
-	if priceFrom != 0 {
-		query = query + fmt.Sprintf(" AND price >= $%d", argCount)
-		args = append(args, priceFrom)
-		argCount++
-	}
-
-	if priceTo != 0 {
-		query = query + fmt.Sprintf(" AND price <= $%d", argCount)
-		args = append(args, priceTo)
-		argCount++
-	}
-
-	if limit > 0 {
-		query += fmt.Sprintf(" LIMIT $%d", argCount)
-		args = append(args, limit)
-		argCount++
-	}
-
-	if offset > 0 {
-		query += fmt.Sprintf(" OFFSET $%d", argCount)
-		args = append(args, offset)
-		argCount++
-	}
+	query = addParameters(query, args, parameters)
 
 	rows, err = rep.db.Query(ctx, query, args...)
 
@@ -100,6 +70,42 @@ func (rep *ProductRepositoryImpl) GetProducts(ctx context.Context, category stri
 	}
 
 	return result, err
+}
+
+func addParameters(query string, args []any, parameters models.ProductsGetQueryParameters) string {
+	argCount := 1
+
+	if parameters.Category != "" {
+		query = query + fmt.Sprintf(" AND category = $%d", argCount)
+		args = append(args, parameters.Category)
+		argCount++
+	}
+
+	if parameters.PriceFrom != 0 {
+		query = query + fmt.Sprintf(" AND price >= $%d", argCount)
+		args = append(args, parameters.PriceFrom)
+		argCount++
+	}
+
+	if parameters.PriceTo != 0 {
+		query = query + fmt.Sprintf(" AND price <= $%d", argCount)
+		args = append(args, parameters.PriceTo)
+		argCount++
+	}
+
+	if parameters.Limit > 0 {
+		query += fmt.Sprintf(" LIMIT $%d", argCount)
+		args = append(args, parameters.Limit)
+		argCount++
+	}
+
+	if parameters.Offset > 0 {
+		query += fmt.Sprintf(" OFFSET $%d", argCount)
+		args = append(args, parameters.Offset)
+		argCount++
+	}
+
+	return query
 }
 
 func (rep *ProductRepositoryImpl) GetProductByID(ctx context.Context, id int) (models.Product, error) {

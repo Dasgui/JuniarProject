@@ -53,7 +53,7 @@ func TestGet(t *testing.T) {
 			QueryParams: "",
 			Setup: func() {
 				service.EXPECT().
-					GetProducts(gomock.Any(), "", 0.0, 0.0, 0, 0).
+					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{}).
 					Return(expectedProducts, nil)
 			},
 
@@ -68,7 +68,9 @@ func TestGet(t *testing.T) {
 			QueryParams: "?category=Electro",
 			Setup: func() {
 				service.EXPECT().
-					GetProducts(gomock.Any(), "Electro", 0.0, 0.0, 0, 0).
+					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+						Category: "Electro",
+					}).
 					Return(expectedProducts[:2], nil)
 			},
 
@@ -83,7 +85,9 @@ func TestGet(t *testing.T) {
 			QueryParams: "?price_from=6000",
 			Setup: func() {
 				service.EXPECT().
-					GetProducts(gomock.Any(), "", 6000.0, 0.0, 0, 0).
+					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+						PriceFrom: 6000.0,
+					}).
 					Return(expectedProducts[1:], nil)
 			},
 
@@ -98,7 +102,9 @@ func TestGet(t *testing.T) {
 			QueryParams: "?price_to=7000",
 			Setup: func() {
 				service.EXPECT().
-					GetProducts(gomock.Any(), "", 0.0, 7000.0, 0, 0).
+					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+						PriceTo: 7000.0,
+					}).
 					Return(expectedProducts[:2], nil)
 			},
 
@@ -113,7 +119,9 @@ func TestGet(t *testing.T) {
 			QueryParams: "?price_from=6000&price_to=7000",
 			Setup: func() {
 				service.EXPECT().
-					GetProducts(gomock.Any(), "", 6000.0, 7000.0, 0, 0).
+					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+						PriceFrom: 6000.0, PriceTo: 7000.0,
+					}).
 					Return(expectedProducts[2:3], nil)
 			},
 
@@ -128,7 +136,9 @@ func TestGet(t *testing.T) {
 			QueryParams: "?category=Middle&price_from=2000&price_to=10000",
 			Setup: func() {
 				service.EXPECT().
-					GetProducts(gomock.Any(), "Middle", 2000.0, 10000.0, 0, 0).
+					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+						Category: "Middle", PriceFrom: 2000.0, PriceTo: 10000.0,
+					}).
 					Return(expectedProducts[1:2], nil)
 			},
 
@@ -143,7 +153,9 @@ func TestGet(t *testing.T) {
 			QueryParams: "?limit=1",
 			Setup: func() {
 				service.EXPECT().
-					GetProducts(gomock.Any(), "", 0.0, 0.0, 1, 0).
+					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+						Limit: 1,
+					}).
 					Return(expectedProducts[1:2], nil)
 			},
 
@@ -158,7 +170,9 @@ func TestGet(t *testing.T) {
 			QueryParams: "?offset=2",
 			Setup: func() {
 				service.EXPECT().
-					GetProducts(gomock.Any(), "", 0.0, 0.0, 0, 2).
+					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+						Offset: 2,
+					}).
 					Return(expectedProducts[:2], nil)
 			},
 
@@ -173,7 +187,9 @@ func TestGet(t *testing.T) {
 			QueryParams: "?limit=2&&offset=1",
 			Setup: func() {
 				service.EXPECT().
-					GetProducts(gomock.Any(), "", 0.0, 0.0, 2, 1).
+					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+						Limit: 2, Offset: 1,
+					}).
 					Return(expectedProducts[1:3], nil)
 			},
 
