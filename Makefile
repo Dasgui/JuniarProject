@@ -1,4 +1,5 @@
 all:
+	docker compose down -v
 	docker-compose up --build
 init-db:
 	docker compose up -d

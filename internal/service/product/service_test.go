@@ -2,16 +2,15 @@ package service
 
 //
 //import (
+//	"JuniarProject/internal/lib/test_data"
 //	"JuniarProject/internal/models"
 //	mock_repository "JuniarProject/internal/repository/product/mocks"
-//	"context"
+//	"net/http"
 //	"testing"
 //	"time"
 //
 //	"github.com/golang/mock/gomock"
 //	"github.com/jackc/pgx/v5/pgtype"
-//	"github.com/stretchr/testify/assert"
-//	"github.com/stretchr/testify/require"
 //)
 //
 //func TestGet(t *testing.T) {
@@ -22,7 +21,7 @@ package service
 //			Name:        "Test-1",
 //			Description: "Description Test-1",
 //			Price:       2300,
-//			Category:    "Test",
+//			Category:    "Middle",
 //			CreatedAt:   pgtype.Timestamp{Time: createdAt, Valid: true},
 //		},
 //		{
@@ -30,15 +29,15 @@ package service
 //			Name:        "Test-2",
 //			Description: "Description Test-2",
 //			Price:       6500,
-//			Category:    "Test",
+//			Category:    "Electro",
 //			CreatedAt:   pgtype.Timestamp{Time: createdAt, Valid: true},
 //		},
 //		{
-//			Id:          1,
+//			Id:          3,
 //			Name:        "Test-1",
 //			Description: "Description Test-1",
 //			Price:       8300,
-//			Category:    "Test",
+//			Category:    "Electro",
 //			CreatedAt:   pgtype.Timestamp{Time: createdAt, Valid: true},
 //		},
 //	}
@@ -46,68 +45,188 @@ package service
 //	defer ctrl.Finish()
 //
 //	repository := mock_repository.NewMockProductRepository(ctrl)
-//	service := NewProductService(repository)
-//	ctx := context.Background()
 //
-//	testTable := []struct {
-//		name string
-//
-//		category  string
-//		priceFrom float64
-//		priceTo   float64
-//		limit     int
-//		offset    int
-//
-//		setup   func()
-//		except  []models.Product
-//		wantErr bool
-//	}{
+//	successTestTable := []test_data.TestServiceTable{
 //		{
-//			name:      "OK",
-//			category:  "",
-//			priceFrom: 0,
-//			priceTo:   0,
-//			limit:     0,
-//			offset:    0,
-//			setup: func() {
+//			Name:       "OK_NO_FILTER",
+//			Parameters: models.ProductsGetQueryParameters{},
+//			Setup: func() {
 //				repository.EXPECT().
-//					GetProducts(ctx, "", 0.0, 0.0, 0, 0).
+//					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{}).
 //					Return(expectedProducts, nil)
 //			},
-//			except:  expectedProducts,
-//			wantErr: false,
+//
+//			Except:         expectedProducts,
+//			ExpectedStatus: http.StatusOK,
+//			ExpectedError:  nil,
+//			ExpectedCount:  len(expectedProducts),
 //		},
+//
 //		{
-//			name:      "NOT_FIND_CATEGORY",
-//			category:  "Ultra Category",
-//			priceFrom: 0,
-//			priceTo:   0,
-//			limit:     0,
-//			offset:    0,
-//			setup: func() {
+//			Name:       "OK_FILTER_CATEGORY",
+//			Parameters: models.ProductsGetQueryParameters{Category: "Electro"},
+//			Setup: func() {
 //				repository.EXPECT().
-//					GetProducts(ctx, "Ultra Category", 0.0, 0.0, 0, 0).
-//					Return([]models.Product{}, nil)
+//					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+//						Category: "Electro",
+//					}).
+//					Return(expectedProducts[:2], nil)
 //			},
-//			except:  []models.Product{},
-//			wantErr: false,
+//
+//			Except:         expectedProducts,
+//			ExpectedStatus: http.StatusOK,
+//			ExpectedError:  nil,
+//			ExpectedCount:  2,
+//		},
+//
+//		{
+//			Name: "OK_FILTER_PRICE_FROM",
+//			Parameters: models.ProductsGetQueryParameters{
+//				PriceFrom: 6000.0,
+//			},
+//			Setup: func() {
+//				repository.EXPECT().
+//					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+//						PriceFrom: 6000.0,
+//					}).
+//					Return(expectedProducts[1:], nil)
+//			},
+//
+//			Except:         expectedProducts,
+//			ExpectedStatus: http.StatusOK,
+//			ExpectedError:  nil,
+//			ExpectedCount:  2,
+//		},
+//
+//		{
+//			Name: "OK_FILTER_PRICE_TO",
+//			Parameters: models.ProductsGetQueryParameters{
+//				PriceTo: 7000.0,
+//			},
+//			Setup: func() {
+//				repository.EXPECT().
+//					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+//						PriceTo: 7000.0,
+//					}).
+//					Return(expectedProducts[:2], nil)
+//			},
+//
+//			Except:         expectedProducts,
+//			ExpectedStatus: http.StatusOK,
+//			ExpectedError:  nil,
+//			ExpectedCount:  2,
+//		},
+//
+//		{
+//			Name: "OK_FILTER_PRICE_FROM_TO",
+//			Parameters: models.ProductsGetQueryParameters{
+//				PriceFrom: 6000.0, PriceTo: 7000.0,
+//			},
+//			Setup: func() {
+//				repository.EXPECT().
+//					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+//						PriceFrom: 6000.0, PriceTo: 7000.0,
+//					}).
+//					Return(expectedProducts[2:3], nil)
+//			},
+//
+//			Except:         expectedProducts,
+//			ExpectedStatus: http.StatusOK,
+//			ExpectedError:  nil,
+//			ExpectedCount:  1,
+//		},
+//
+//		{
+//			Name: "OK_FILTER_CATEGORY_PRICE_FROM_TO",
+//			Parameters: models.ProductsGetQueryParameters{
+//				Category: "Middle", PriceFrom: 2000.0, PriceTo: 10000.0,
+//			},
+//			Setup: func() {
+//				repository.EXPECT().
+//					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+//						Category: "Middle", PriceFrom: 2000.0, PriceTo: 10000.0,
+//					}).
+//					Return(expectedProducts[1:2], nil)
+//			},
+//
+//			Except:         expectedProducts,
+//			ExpectedStatus: http.StatusOK,
+//			ExpectedError:  nil,
+//			ExpectedCount:  1,
+//		},
+//
+//		{
+//			Name: "OK_FILTER_LIMIT",
+//			Parameters: models.ProductsGetQueryParameters{
+//				Limit: 1,
+//			},
+//			Setup: func() {
+//				repository.EXPECT().
+//					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+//						Limit: 1,
+//					}).
+//					Return(expectedProducts[1:2], nil)
+//			},
+//
+//			Except:         expectedProducts,
+//			ExpectedStatus: http.StatusOK,
+//			ExpectedError:  nil,
+//			ExpectedCount:  1,
+//		},
+//
+//		{
+//			Name: "OK_FILTER_OFFSET",
+//			Parameters: models.ProductsGetQueryParameters{
+//				Offset: 2,
+//			},
+//			Setup: func() {
+//				repository.EXPECT().
+//					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+//						Offset: 2,
+//					}).
+//					Return(expectedProducts[:2], nil)
+//			},
+//
+//			Except:         expectedProducts,
+//			ExpectedStatus: http.StatusOK,
+//			ExpectedError:  nil,
+//			ExpectedCount:  2,
+//		},
+//
+//		{
+//			Name: "OK_FILTER_LIMIT_OFFSET",
+//			Parameters: models.ProductsGetQueryParameters{
+//				Limit: 2, Offset: 1,
+//			},
+//			Setup: func() {
+//				repository.EXPECT().
+//					GetProducts(gomock.Any(), models.ProductsGetQueryParameters{
+//						Limit: 2, Offset: 1,
+//					}).
+//					Return(expectedProducts[1:3], nil)
+//			},
+//
+//			Except:         expectedProducts,
+//			ExpectedStatus: http.StatusOK,
+//			ExpectedError:  nil,
+//			ExpectedCount:  2,
 //		},
 //	}
 //
-//	for _, tt := range testTable {
-//		t.Run(tt.name, func(t *testing.T) {
-//			tt.setup()
+//	//errorTestTable := []test_data.TestServiceTable{
+//	//	{
+//	//		Name:       "ERROR_INVALID_PARAMETRES",
+//	//		Parameters: models.ProductsGetQueryParameters{},
+//	//		Setup: func() {
+//	//			repository.EXPECT().
+//	//				GetProducts(gomock.Any(), models.ProductsGetQueryParameters{}).
+//	//				Return(nil, assert.AnError)
+//	//		},
+//	//		Except:        nil,
+//	//		ExpectedError: assert.AnError,
+//	//		ExpectedCount: 0,
+//	//	},
+//	//}
 //
-//			got, err := service.GetProducts(ctx, tt.category, tt.priceFrom, tt.priceTo, tt.limit, tt.offset)
-//
-//			if tt.wantErr {
-//				assert.Error(t, err)
-//				return
-//			}
-//
-//			require.NoError(t, err)
-//			assert.Equal(t, tt.except, got)
-//		})
-//	}
-//
+//	test_data.StartRepositoryTest(t, successTestTable, repository.GetProducts)
 //}

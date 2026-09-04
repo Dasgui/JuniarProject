@@ -81,22 +81,22 @@ func (mr *MockProductRepositoryMockRecorder) GetProductByID(ctx, id interface{})
 }
 
 // GetProducts mocks base method.
-func (m *MockProductRepository) GetProducts(ctx context.Context, category string, priceFrom, priceTo float64, limit, offset int) ([]models.Product, error) {
+func (m *MockProductRepository) GetProducts(ctx context.Context, parameters models.ProductsGetQueryParameters) ([]models.Product, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProducts", ctx, category, priceFrom, priceTo, limit, offset)
+	ret := m.ctrl.Call(m, "GetProducts", ctx, parameters)
 	ret0, _ := ret[0].([]models.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetProducts indicates an expected call of GetProducts.
-func (mr *MockProductRepositoryMockRecorder) GetProducts(ctx, category, priceFrom, priceTo, limit, offset interface{}) *gomock.Call {
+func (mr *MockProductRepositoryMockRecorder) GetProducts(ctx, parameters interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProducts", reflect.TypeOf((*MockProductRepository)(nil).GetProducts), ctx, category, priceFrom, priceTo, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProducts", reflect.TypeOf((*MockProductRepository)(nil).GetProducts), ctx, parameters)
 }
 
 // UpdateProduct mocks base method.
-func (m *MockProductRepository) UpdateProduct(ctx context.Context, product models.Product, id int) (models.Product, error) {
+func (m *MockProductRepository) UpdateProduct(ctx context.Context, product models.ProductRequest, id int) (models.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProduct", ctx, product, id)
 	ret0, _ := ret[0].(models.Product)

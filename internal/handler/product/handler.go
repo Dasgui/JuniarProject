@@ -181,6 +181,12 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = requestBody.CheckFields()
+	if err != nil {
+		internalErrors.PrintError(w, err)
+		return
+	}
+
 	result, err = h.service.UpdateProduct(r.Context(), requestBody, id)
 	if err != nil {
 		internalErrors.PrintError(w, err)
