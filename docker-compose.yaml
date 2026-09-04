@@ -39,24 +39,24 @@ services:
         condition: service_healthy
     restart: "no"
 
-#  api:
-#    build:
-#      context: ./
-#      dockerfile: Dockerfile
-#    container_name: shop-api
-#    ports:
-#      - "8081:8081"
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#    environment:
-#      DB_HOST: postgres
-#      DB_PORT: 5432
-#      SERVER_PORT: 8081
-#      DB_USER: Comix
-#      DB_PASSWORD: tron
-#      DB_NAME: product-store
-#    restart: unless-stopped
+  api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: shop-api
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      SERVER_PORT: 8081
+      DB_USER: Comix
+      DB_PASSWORD: tron
+      DB_NAME: product-store
+    restart: unless-stopped
 
 volumes:
   postgres-data:

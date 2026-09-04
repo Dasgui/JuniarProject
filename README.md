@@ -7,3 +7,5 @@ docker-compose up --build
 # Сервер будет доступен по адресу:
 # http://localhost:8081/products
 ```
+После успешного старта вы также можете запустить http://localhost:8081/swagger/index.html, чтобы проверить имеющейся функционал.
+
