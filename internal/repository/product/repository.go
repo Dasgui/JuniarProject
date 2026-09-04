@@ -50,7 +50,7 @@ func (rep *ProductRepositoryImpl) GetProducts(ctx context.Context, parameters mo
 
 	var result []models.Product
 
-	query = addParameters(query, args, parameters)
+	query, args = addParameters(query, args, parameters)
 
 	rows, err = rep.db.Query(ctx, query, args...)
 
@@ -72,23 +72,23 @@ func (rep *ProductRepositoryImpl) GetProducts(ctx context.Context, parameters mo
 	return result, err
 }
 
-func addParameters(query string, args []any, parameters models.ProductsGetQueryParameters) string {
+func addParameters(query string, args []any, parameters models.ProductsGetQueryParameters) (string, []any) {
 	argCount := 1
 
 	if parameters.Category != "" {
-		query = query + fmt.Sprintf(" AND category = $%d", argCount)
+		query += fmt.Sprintf(" AND category = $%d", argCount)
 		args = append(args, parameters.Category)
 		argCount++
 	}
 
 	if parameters.PriceFrom != 0 {
-		query = query + fmt.Sprintf(" AND price >= $%d", argCount)
+		query += fmt.Sprintf(" AND price >= $%d", argCount)
 		args = append(args, parameters.PriceFrom)
 		argCount++
 	}
 
 	if parameters.PriceTo != 0 {
-		query = query + fmt.Sprintf(" AND price <= $%d", argCount)
+		query += fmt.Sprintf(" AND price <= $%d", argCount)
 		args = append(args, parameters.PriceTo)
 		argCount++
 	}
@@ -105,7 +105,7 @@ func addParameters(query string, args []any, parameters models.ProductsGetQueryP
 		argCount++
 	}
 
-	return query
+	return query, args
 }
 
 func (rep *ProductRepositoryImpl) GetProductByID(ctx context.Context, id int) (models.Product, error) {
