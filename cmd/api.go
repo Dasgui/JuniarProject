@@ -4,6 +4,7 @@ import (
 	handler "JuniarProject/internal/handler/product"
 	repository "JuniarProject/internal/repository/product"
 	service "JuniarProject/internal/service/product"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -12,7 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -27,10 +28,13 @@ type dbConfig struct {
 
 type application struct {
 	config config
-	db     *pgx.Conn
+	db     *pgxpool.Pool
 }
 
 func (app *application) mount() http.Handler {
+	port := getEnv("SERVER_PORT", "8081")
+	swaggerAddress := fmt.Sprintf("http://localhost:%s/swagger/doc.json", port)
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -44,7 +48,7 @@ func (app *application) mount() http.Handler {
 	productHandler := handler.NewProductHandler(productService)
 
 	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8081/swagger/doc.json"), //The url pointing to API definition
+		httpSwagger.URL(swaggerAddress),
 	))
 
 	r.Route("/products", func(r chi.Router) {

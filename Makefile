@@ -1,8 +1,9 @@
-all:
-	docker compose down -v
-	docker-compose up --build
-init-db:
-	docker compose up -d
+run:
+	docker compose up --build
+
+docker-rebuild:
+	docker compose down -v && \
+	docker compose up --build
 
 migrate:
 	goose up
@@ -10,11 +11,8 @@ migrate:
 drop-bd:
 	goose down
 
-clean:
-	$(MAKE) drop-bd
-	docker compose down -v
-
 test:
+	go generate ./internal/service/product/...
 	go test -v -race ./internal/handler/product/...
 
 swag:

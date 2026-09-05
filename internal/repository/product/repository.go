@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 //go:generate mockgen -source=repository.go -destination=mocks/mock.go
@@ -18,10 +19,10 @@ type ProductRepository interface {
 }
 
 type ProductRepositoryImpl struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
-func NewProductRepository(db *pgx.Conn) *ProductRepositoryImpl {
+func NewProductRepository(db *pgxpool.Pool) *ProductRepositoryImpl {
 	return &ProductRepositoryImpl{db: db}
 }
 
@@ -62,6 +63,9 @@ func (rep *ProductRepositoryImpl) GetProducts(ctx context.Context, parameters mo
 	for rows.Next() {
 		var product models.Product
 		err = rows.Scan(&product.Id, &product.Name, &product.Description, &product.Price, &product.Category, &product.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
 		result = append(result, product)
 	}
 

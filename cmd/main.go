@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // @title Junior Project
@@ -37,17 +37,25 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	conn, err := pgx.Connect(ctx, cfg.db.address)
+	poolConfig, err := pgxpool.ParseConfig(cfg.db.address)
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close(ctx)
+
+	poolConfig.MaxConns = 10
+	poolConfig.MinConns = 2
+
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+	if err != nil {
+		panic(err)
+	}
+	defer pool.Close()
 
 	logger.Info("Connected to database", cfg.db.address)
 
 	api := &application{
 		config: cfg,
-		db:     conn,
+		db:     pool,
 	}
 
 	if err := api.run(api.mount()); err != nil {

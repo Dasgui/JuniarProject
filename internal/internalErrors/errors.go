@@ -72,7 +72,6 @@ func PrintError(w http.ResponseWriter, err error) {
 	if err == nil {
 		return
 	}
-	//msg, code := DecipherError(err)
 	log.Println(err)
 	appError := ConvertError(err)
 	http.Error(w, appError.Err.Error(), appError.Code)
@@ -82,11 +81,6 @@ func ConvertError(err error) AppError {
 	var syntaxErr *json.SyntaxError
 	var unmarshalTypeErr *json.UnmarshalTypeError
 	var unmarshalInvalidErr *json.InvalidUnmarshalError
-
-	//var appErr AppError
-	//if errors.As(err, &appErr) {
-	//	return appErr
-	//}
 
 	if err.Error() == "EOF" || err.Error() == "request body is empty" {
 		return JsonEmptyBodyError
@@ -105,17 +99,6 @@ func ConvertError(err error) AppError {
 	case errors.As(err, &syntaxErr):
 		return JsonSyntaxError
 	}
-	//if errors.As(err, &syntaxErr) {
-	//	return JsonSyntaxError
-	//}
-
-	//if errors.As(err, &unmarshalTypeErr) {
-	//	return JsonTypeError
-	//}
-
-	//if strings.Contains(err.Error(), "unknown field") {
-	//	return JsonUnknownFieldError
-	//}
 
 	switch {
 	case errors.Is(err, PriceError.Err):
@@ -134,87 +117,3 @@ func ConvertError(err error) AppError {
 
 	return InternalServerErr
 }
-
-//func HandleDbError(err error) AppError {
-//	if errors.Is(err, pgx.ErrNoRows) {
-//		return DataNotFound
-//	}
-//	return InternalServerErr
-//}
-
-//func ParseUrlError(err error) error {
-//if err == nil {
-//	return nil
-//}
-
-// Проверяем на синтаксическую ошибку (не число)
-//if errors.Is(err, strconv.ErrSyntax) {
-//	return InvalidParameterError
-//}
-
-// Проверяем на выход за пределы
-//if errors.Is(err, strconv.ErrRange) {
-//	return IdRangeError
-//}
-//
-//	return err
-//}
-
-//func ParseJsonError(err error) error {
-//	if err == nil {
-//		return nil
-//	}
-
-//if err.Error() == "EOF" || err.Error() == "request body is empty" {
-//	return JsonEmptyBodyError
-//}
-//
-//var syntaxErr *json.SyntaxError
-//if errors.As(err, &syntaxErr) {
-//	return JsonSyntaxError
-//}
-//
-//// Проверяем на ошибки типов
-//var unmarshalTypeErr *json.UnmarshalTypeError
-//if errors.As(err, &unmarshalTypeErr) {
-//	return JsonTypeError
-//}
-//
-//if strings.Contains(err.Error(), "unknown field") {
-//	return JsonUnknownFieldError
-//}
-//
-//	return err
-//}
-
-//func DecipherError(err error) (string, int) {
-//	switch {
-//case errors.Is(err, PriceError):
-//	return PriceError.Error(), http.StatusBadRequest
-//
-//case errors.Is(err, IdRangeError):
-//	return IdRangeError.Error(), http.StatusBadRequest
-//
-//case errors.Is(err, InvalidParameterError):
-//	return InvalidParameterError.Error(), http.StatusBadRequest
-//
-//case errors.Is(err, JsonSyntaxError):
-//	return JsonSyntaxError.Error(), http.StatusBadRequest
-//
-//case errors.Is(err, JsonEmptyBodyError):
-//	return JsonEmptyBodyError.Error(), http.StatusBadRequest
-//
-//case errors.Is(err, JsonUnknownFieldError):
-//	return JsonUnknownFieldError.Error(), http.StatusBadRequest
-//
-//case errors.Is(err, JsonTypeError):
-//	return JsonTypeError.Error(), http.StatusBadRequest
-//case errors.Is(err, EmptyFieldsError):
-//	return EmptyFieldsError.Error(), http.StatusBadRequest
-//
-//case errors.Is(err, NegativePriceError):
-//	return NegativePriceError.Error(), http.StatusBadRequest
-//default:
-//	return "", http.StatusInternalServerError
-//}
-//}

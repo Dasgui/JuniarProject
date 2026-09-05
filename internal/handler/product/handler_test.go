@@ -9,7 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -47,7 +49,10 @@ func TestGet(t *testing.T) {
 	service := mock_service.NewMockProductService(ctrl)
 	h := NewProductHandler(service)
 
-	successTestTable := []test_data.TestTable{
+	r := chi.NewRouter()
+	r.Get("/products/", h.GetProducts)
+
+	successTestTable := []test_data.ProductTestTable{
 		{
 			Name:        "OK_NO_FILTER",
 			QueryParams: "",
@@ -199,8 +204,7 @@ func TestGet(t *testing.T) {
 			ExpectedCount:  2,
 		},
 	}
-
-	errorTestTable := []test_data.TestTable{
+	errorTestTable := []test_data.ProductTestTable{
 		{
 			Name:        "ERROR_FILTER_SYNTEX_PRICE_FROM",
 			QueryParams: "?price_from=asdasdas",
@@ -322,6 +326,401 @@ func TestGet(t *testing.T) {
 			ExpectedCount:  0,
 		},
 	}
-	test_data.StartTest(t, successTestTable, h.GetProducts)
-	test_data.StartTest(t, errorTestTable, h.GetProducts)
+
+	test_data.StartTest(t, successTestTable, r, http.MethodGet)
+	test_data.StartTest(t, errorTestTable, r, http.MethodGet)
+}
+
+func TestGetById(t *testing.T) {
+	createdAt, _ := time.Parse(time.RFC3339, "2026-01-01 12:00:00")
+	expectedProduct := models.Product{
+		Id:          1,
+		Name:        "Test-1",
+		Description: "Description Test-1",
+		Price:       2300,
+		Category:    "Middle",
+		CreatedAt:   pgtype.Timestamp{Time: createdAt, Valid: true},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := mock_service.NewMockProductService(ctrl)
+	h := NewProductHandler(service)
+
+	r := chi.NewRouter()
+	r.Get("/products/{id}", h.GetProductByID)
+
+	successTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "OK",
+			QueryParams: "1",
+			Setup: func() {
+				service.EXPECT().
+					GetProductByID(gomock.Any(), 1).
+					Return(expectedProduct, nil)
+			},
+
+			Except:         expectedProduct,
+			ExpectedStatus: http.StatusOK,
+			ExpectedError:  nil,
+		},
+	}
+	errorsIdTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "ERROR_INVALID_ID",
+			QueryParams: "asdasd",
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.InvalidParameterError.Code,
+			ExpectedError:  internalErrors.InvalidParameterError.Err,
+		},
+		{
+			Name:        "ERROR_RANGE_ID",
+			QueryParams: "200000000000000000000000000000000000000000000000000000000000000000000",
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.IdRangeError.Code,
+			ExpectedError:  internalErrors.IdRangeError.Err,
+		},
+
+		{
+			Name:        "ERROR_NOT_FOUND_ID",
+			QueryParams: "200",
+			Setup: func() {
+				service.EXPECT().
+					GetProductByID(gomock.Any(), 200).
+					Return(models.Product{}, pgx.ErrNoRows)
+			},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.DataNotFound.Code,
+			ExpectedError:  internalErrors.DataNotFound.Err,
+		},
+	}
+
+	test_data.StartTest(t, successTestTable, r, http.MethodGet)
+	test_data.StartTest(t, errorsIdTestTable, r, http.MethodGet)
+}
+
+func TestDelete(t *testing.T) {
+	createdAt, _ := time.Parse(time.RFC3339, "2026-01-01 12:00:00")
+	expectedProduct := models.Product{
+		Id:          1,
+		Name:        "Test-1",
+		Description: "Description Test-1",
+		Price:       2300,
+		Category:    "Middle",
+		CreatedAt:   pgtype.Timestamp{Time: createdAt, Valid: true},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := mock_service.NewMockProductService(ctrl)
+	h := NewProductHandler(service)
+
+	r := chi.NewRouter()
+	r.Delete("/products/{id}", h.DeleteProduct)
+
+	successTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "OK",
+			QueryParams: "1",
+			Setup: func() {
+				service.EXPECT().
+					DeleteProduct(gomock.Any(), 1).
+					Return(expectedProduct, nil)
+			},
+
+			Except:         expectedProduct,
+			ExpectedStatus: http.StatusOK,
+			ExpectedError:  nil,
+		},
+	}
+
+	errorsIdTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "ERROR_INVALID_ID",
+			QueryParams: "asdasd",
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.InvalidParameterError.Code,
+			ExpectedError:  internalErrors.InvalidParameterError.Err,
+		},
+
+		{
+			Name:        "ERROR_NOT_FOUND_ID",
+			QueryParams: "200",
+			Setup: func() {
+				service.EXPECT().
+					DeleteProduct(gomock.Any(), 200).
+					Return(models.Product{}, pgx.ErrNoRows)
+			},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.DataNotFound.Code,
+			ExpectedError:  internalErrors.DataNotFound.Err,
+		},
+
+		{
+			Name:        "ERROR_RANGE_ID",
+			QueryParams: "200000000000000000000000000000000000000000000000000000000000000000000",
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.IdRangeError.Code,
+			ExpectedError:  internalErrors.IdRangeError.Err,
+		},
+	}
+
+	test_data.StartTest(t, successTestTable, r, http.MethodDelete)
+	test_data.StartTest(t, errorsIdTestTable, r, http.MethodDelete)
+}
+
+func TestCreate(t *testing.T) {
+	createdAt, _ := time.Parse(time.RFC3339, "2026-01-01 12:00:00")
+	expectedProduct := models.Product{
+		Id:          1,
+		Name:        "Test-1",
+		Description: "Description Test-1",
+		Price:       2300,
+		Category:    "Middle",
+		CreatedAt:   pgtype.Timestamp{Time: createdAt, Valid: true},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := mock_service.NewMockProductService(ctrl)
+	h := NewProductHandler(service)
+
+	r := chi.NewRouter()
+	r.Post("/products/", h.CreateProduct)
+
+	successTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "OK",
+			QueryParams: "",
+			Body:        `{"name":"Test-1", "description": "Description Test-1", "price": 2300, "category": "Middle"}`,
+			Setup: func() {
+				service.EXPECT().
+					CreateProduct(gomock.Any(), gomock.Any()).
+					Return(expectedProduct, nil)
+			},
+
+			Except:         expectedProduct,
+			ExpectedStatus: http.StatusOK,
+			ExpectedError:  nil,
+		},
+	}
+
+	errorsEmptyFieldTestTable := []test_data.ProductTestTable{
+		{
+			Name:           "ERROR_EMPTY_NAME",
+			Body:           `{"name":"", "description": "Description Test-1", "price": 2300, "category": "Middle"}`,
+			Setup:          func() {},
+			Except:         models.Product{},
+			ExpectedStatus: internalErrors.EmptyFieldsError.Code,
+			ExpectedError:  internalErrors.EmptyFieldsError.Err,
+		},
+
+		{
+			Name:           "ERROR_EMPTY_TEXT_FIELDS",
+			Body:           `{"name":"", "description": "", "price": 2300, "category": ""}`,
+			Setup:          func() {},
+			Except:         models.Product{},
+			ExpectedStatus: internalErrors.EmptyFieldsError.Code,
+			ExpectedError:  internalErrors.EmptyFieldsError.Err,
+		},
+
+		{
+			Name:           "ERROR_EMPTY_BODY",
+			Body:           `{}`,
+			Setup:          func() {},
+			Except:         models.Product{},
+			ExpectedStatus: internalErrors.EmptyFieldsError.Code,
+			ExpectedError:  internalErrors.EmptyFieldsError.Err,
+		},
+	}
+	errorsFieldTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "ERROR_UNKNOW_FIELD",
+			QueryParams: "",
+			Body:        `{"name":"Test-1", "description": "Description Test-1", "price": 2300, "category": "Middle", "lol": 2123}`,
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.JsonUnknownFieldError.Code,
+			ExpectedError:  internalErrors.JsonUnknownFieldError.Err,
+		},
+
+		{
+			Name:        "ERROR_INVALID_FIELD_TYPE",
+			QueryParams: "",
+			Body:        `{"name":"Test-1", "description": "Description Test-1", "price": 2300, "category": 345}`,
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.JsonTypeError.Code,
+			ExpectedError:  internalErrors.JsonTypeError.Err,
+		},
+
+		{
+			Name:           "ERROR_NEGATIVE_PRICE",
+			Body:           `{"name":"Test-1", "description": "Description Test-1", "price": -2300, "category": "Middle"}`,
+			Setup:          func() {},
+			Except:         models.Product{},
+			ExpectedStatus: internalErrors.NegativePriceError.Code,
+			ExpectedError:  internalErrors.NegativePriceError.Err,
+		},
+	}
+
+	test_data.StartTest(t, successTestTable, r, http.MethodPost)
+
+	test_data.StartTest(t, errorsEmptyFieldTestTable, r, http.MethodPost)
+	test_data.StartTest(t, errorsFieldTestTable, r, http.MethodPost)
+}
+
+func TestUpdate(t *testing.T) {
+	createdAt, _ := time.Parse(time.RFC3339, "2026-01-01 12:00:00")
+	expectedProduct := models.Product{
+		Id:          1,
+		Name:        "Update Test",
+		Description: "Update Description",
+		Price:       9000,
+		Category:    "Update Category",
+		CreatedAt:   pgtype.Timestamp{Time: createdAt, Valid: true},
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := mock_service.NewMockProductService(ctrl)
+	h := NewProductHandler(service)
+
+	r := chi.NewRouter()
+	r.Put("/products/{id}", h.UpdateProduct)
+
+	successTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "OK",
+			QueryParams: "1",
+			Body:        `{"name":"Update Test", "description": "Update Description", "price": 9000, "category": "Update Category"}`,
+			Setup: func() {
+				service.EXPECT().
+					UpdateProduct(gomock.Any(), gomock.Any(), 1).
+					Return(expectedProduct, nil)
+			},
+
+			Except:         expectedProduct,
+			ExpectedStatus: http.StatusOK,
+			ExpectedError:  nil,
+		},
+	}
+
+	errorsEmptyFieldTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "ERROR_EMPTY_NAME",
+			QueryParams: "1",
+			Body:        `{"name":"", "description": "Update Description", "price": 9000, "category": "Update Category"}`,
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.EmptyFieldsError.Code,
+			ExpectedError:  internalErrors.EmptyFieldsError.Err,
+		},
+
+		{
+			Name:        "ERROR_EMPTY_TEXT_FIELDS",
+			QueryParams: "1",
+			Body:        `{"name":"", "description": "", "price": 9000, "category": ""}`,
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.EmptyFieldsError.Code,
+			ExpectedError:  internalErrors.EmptyFieldsError.Err,
+		},
+
+		{
+			Name:        "ERROR_EMPTY_BODY",
+			QueryParams: "1",
+			Body:        `{}`,
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.EmptyFieldsError.Code,
+			ExpectedError:  internalErrors.EmptyFieldsError.Err,
+		},
+	}
+	errorsFieldTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "ERROR_UNKNOW_FIELD",
+			QueryParams: "1",
+			Body:        `{"name":"Update Test", "description": "Update Description", "price": 9000, "category": "Update Category", "lol":23123}`,
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.JsonUnknownFieldError.Code,
+			ExpectedError:  internalErrors.JsonUnknownFieldError.Err,
+		},
+
+		{
+			Name:        "ERROR_INVALID_FIELD_TYPE",
+			QueryParams: "1",
+			Body:        `{"name":"Update Test", "description": "Update Description", "price": 9000, "category": 2000}`,
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.JsonTypeError.Code,
+			ExpectedError:  internalErrors.JsonTypeError.Err,
+		},
+
+		{
+			Name:        "ERROR_NEGATIVE_PRICE",
+			QueryParams: "1",
+			Body:        `{"name":"Update Test", "description": "Update Description", "price": -9000, "category": "Update Category"}`,
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.NegativePriceError.Code,
+			ExpectedError:  internalErrors.NegativePriceError.Err,
+		},
+	}
+	errorsIdTestTable := []test_data.ProductTestTable{
+		{
+			Name:        "ERROR_NOT_FOUND_ID",
+			QueryParams: "200",
+			Body:        `{"name":"Update Test", "description": "Update Description", "price": 9000, "category": "Update Category"}`,
+			Setup: func() {
+				service.EXPECT().
+					UpdateProduct(gomock.Any(), gomock.Any(), 200).
+					Return(models.Product{}, pgx.ErrNoRows)
+			},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.DataNotFound.Code,
+			ExpectedError:  internalErrors.DataNotFound.Err,
+		},
+
+		{
+			Name:        "ERROR_RANGE_ID",
+			QueryParams: "200000000000000000000000000000000000000000000000",
+			Body:        `{"name":"Update Test", "description": "Update Description", "price": 9000, "category": "Update Category"}`,
+			Setup:       func() {},
+
+			Except:         expectedProduct,
+			ExpectedStatus: internalErrors.IdRangeError.Code,
+			ExpectedError:  internalErrors.IdRangeError.Err,
+		},
+	}
+
+	test_data.StartTest(t, successTestTable, r, http.MethodPut)
+
+	test_data.StartTest(t, errorsEmptyFieldTestTable, r, http.MethodPut)
+	test_data.StartTest(t, errorsFieldTestTable, r, http.MethodPut)
+	test_data.StartTest(t, errorsIdTestTable, r, http.MethodPut)
 }

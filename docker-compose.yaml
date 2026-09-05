@@ -3,15 +3,15 @@ services:
     image: postgres:16-alpine
     container_name: shop-postgres
     environment:
-      POSTGRES_USER: Comix
-      POSTGRES_PASSWORD: tron
-      POSTGRES_DB: product-store
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U Comix -d product-store"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -45,17 +45,17 @@ services:
       dockerfile: Dockerfile
     container_name: shop-api
     ports:
-      - "8081:8081"
+      - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       DB_HOST: postgres
-      DB_PORT: 5432
-      SERVER_PORT: 8081
-      DB_USER: Comix
-      DB_PASSWORD: tron
-      DB_NAME: product-store
+      DB_PORT: ${DB_PORT}
+      SERVER_PORT: ${SERVER_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
     restart: unless-stopped
 
 volumes:
